@@ -76,7 +76,7 @@ class StackApp usingPlatform: platform = Value (
   )
 
   public testAsyncStack = (
-    | stack pair r p |
+    | stack pair r p promise1 promise2 promise3 |
     pair := actors createPromisePair.
     r := pair resolver.
     p := pair promise.
