@@ -1,0 +1,94 @@
+class Stack usingPlatform: platform = Value (
+| private Vector    = platform kernel Vector.
+  private actors    = platform actors.
+  private waitingPush = Vector new.
+  private waitingPop = Vector new.
+  private vector = Vector new: 2.
+  |) (
+
+public push: x = (
+  vector capacity = vector size
+    ifTrue: [
+      'push' println.
+      vector append: x.
+      notifyPop.
+      nil ].
+    ifFalse: [
+      'waiting for pop...because stack is full' println.
+      p := waitPush().
+      p whenResolved: [: value | vector append: x].
+    ].
+)
+
+public waitPush = (
+  pair := actors createPromisePair.
+  r := pair resolver.
+  p := pair promise.
+  waitingPush append: r.
+  ^ p
+)
+
+public notifyPush = (
+  waitingPush isEmpty
+    ifTrue: [].
+    ifFalse: [
+      'notify push' println.
+      r := waitingPush at: 1 resolve: ok.
+      waitingPush removeFirst.
+    ].
+)
+
+public pop = (
+  vector isEmpty
+    ifTrue: [
+    'waiting for a push, stack is empty' println.
+     p := waitPop.
+     p whenResolved: [: value | pop].
+    ].
+    ifFalse: [
+      val := vector pop.
+      notifyPush.
+      val.
+    ].
+)
+
+public waitPop = (
+pair := actors createPromisePair.
+r := pair resolver.
+p := pair promise.
+waitingPop append: r.
+^ p
+)
+
+public notifyPop = (
+  waitingPop isEmpty
+  ifTrue: []
+  ifFalse: [
+  	'notify pop' println.
+    waitingPop at: 1 resolve: ok.
+    waitingPop removeFirst.
+  ]
+)
+
+public main: args = (
+    'Hello Stack!' println.
+
+    public testAsyncStack = (
+      pair := actors createPromisePair.
+      r := pair resolver.
+      p := pair promise.
+
+      private stack := Stack new.
+
+      promise1 :=  stack <-: push: 1.
+      promise2 :=  stack <-: push: 2.
+      promise3 :=  stack <-: push: 3.
+
+      promise3 whenResolved: [: value |
+        stack <-: pop.
+        'pop value' + value println.
+        r resolve: ok.
+      ].
+    )
+  )
+)
