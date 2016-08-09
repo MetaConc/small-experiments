@@ -69,10 +69,11 @@ class StackApp usingPlatform: platform = Value (
   )
   
   public main: args = (
+    | p |
     'Hello Stack!' println.
-    testAsyncStack.
+    p := testAsyncStack.
     'testAsyncStack Done' println.
-    ^ 0
+    ^ p
   )
 
   public testAsyncStack = (
@@ -87,7 +88,7 @@ class StackApp usingPlatform: platform = Value (
     promise2 :=  stack <-: push: 2.
     promise3 :=  stack <-: push: 3.
 
-    promise3 whenResolved: [: value |
+    ^ promise3 whenResolved: [: value |
       stack <-: pop.
       'pop value' + value println.
       r resolve: ok ]
