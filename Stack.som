@@ -10,64 +10,73 @@ class StackApp usingPlatform: platform = Value (
   |)(
 
     public push: x = (
+    | p |
       vector capacity = vector size
         ifTrue: [
-          'push' println.
-          vector append: x.
-          notifyPop ]
-        ifFalse: [
           'waiting for pop...because stack is full' println.
           p := waitPush.
-          p whenResolved: [: value | vector append: x ] ]
+          p whenResolved: [: value | push: x ] ]
+        ifFalse: [
+          'push ' print.
+          x println.
+          vector append: x.
+          notifyPop ]
     )
-  
+
     public waitPush = (
-      | pair |
+      | pair p r |
       pair := actors createPromisePair.
       r := pair resolver.
       p := pair promise.
       waitingPush append: r.
       ^ p
     )
-  
+
     public notifyPush = (
-      waitingPush isEmpty
+    | r |
+       waitingPush isEmpty
         ifFalse: [
           'notify push' println.
-          r := waitingPush at: 1 resolve: ok.
+          r := waitingPush at: 1.
+          r resolve: true.
           waitingPush removeFirst.
         ]
     )
-  
+
     public pop = (
+    | p val |
       vector isEmpty
         ifTrue: [
           'waiting for a push, stack is empty' println.
           p := waitPop.
           ^ p whenResolved: [: value | pop ] ]
         ifFalse: [
-          val := vector pop.
+          val := vector remove.
+          'pop ' print.
+          val println.
           notifyPush.
           ^ val ]
     )
-  
+
     public waitPop = (
-      | pair |
+      | pair p r |
       pair := actors createPromisePair.
       r := pair resolver.
       p := pair promise.
       waitingPop append: r.
       ^ p
     )
-  
+
     public notifyPop = (
+    | r |
       waitingPop isEmpty ifFalse: [
         'notify pop' println.
-        waitingPop at: 1 resolve: ok.
+        r := waitingPop at: 1.
+        r resolve: true.
         waitingPop removeFirst ]
     )
   )
-  
+
   public main: args = (
     | p |
     'Hello Stack!' println.
@@ -77,7 +86,7 @@ class StackApp usingPlatform: platform = Value (
   )
 
   public testAsyncStack = (
-    | stack pair r p promise1 promise2 promise3 |
+    | stack pair r p promise1 promise2 promise3 promise4 promise5 |
     pair := actors createPromisePair.
     r := pair resolver.
     p := pair promise.
@@ -88,9 +97,21 @@ class StackApp usingPlatform: platform = Value (
     promise2 :=  stack <-: push: 2.
     promise3 :=  stack <-: push: 3.
 
-    ^ promise3 whenResolved: [: value |
-      stack <-: pop.
-      'pop value' + value println.
-      r resolve: ok ]
+    promise3 whenResolved: [: value |
+      promise4 := stack <-: pop.
+      promise4 whenResolved: [: v |
+        'second pop- ' print.
+        v println.
+        r resolve: true
+        ]
+    ].
+
+    promise5 := stack <-: pop.
+    promise5 whenResolved: [: vl |
+      'first pop- ' print.
+      vl println.
+    ].
+
+    ^ p
   )
 )
