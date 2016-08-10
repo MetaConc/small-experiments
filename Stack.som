@@ -24,7 +24,7 @@ class StackApp usingPlatform: platform = Value (
     )
 
     public waitPush = (
-      | pair p r |
+    | pair p r |
       pair := actors createPromisePair.
       r := pair resolver.
       p := pair promise.
@@ -59,7 +59,7 @@ class StackApp usingPlatform: platform = Value (
     )
 
     public waitPop = (
-      | pair p r |
+    | pair p r |
       pair := actors createPromisePair.
       r := pair resolver.
       p := pair promise.
@@ -78,7 +78,7 @@ class StackApp usingPlatform: platform = Value (
   )
 
   public main: args = (
-    | p |
+  | p |
     'Hello Stack!' println.
     p := testAsyncStack.
     'testAsyncStack Done' println.
@@ -86,7 +86,7 @@ class StackApp usingPlatform: platform = Value (
   )
 
   public testAsyncStack = (
-    | stack pair r p promise1 promise2 promise3 promise4 promise5 |
+  | stack pair r p promise1 promise2 promise3 promise4 promise5 |
     pair := actors createPromisePair.
     r := pair resolver.
     p := pair promise.
