@@ -1,17 +1,19 @@
 class StackApp usingPlatform: platform = Value (
-| private Vector    = platform kernel Vector.
+| private Array    = platform kernel Array.
   private actors    = platform actors.
+  private Vector    = platform kernel Vector.
 |)(
 
-  private class Stack = (
+  private class Stack new: length = (
   | private waitingPush = Vector new.
     private waitingPop  = Vector new.
-    private vector      = Vector new: 2.
+    private stackArray  = Array new: length.
+    private counter ::= 0.
   |)(
 
     public push: x = (
     | p |
-      vector capacity = vector size
+        stackArray size = counter
         ifTrue: [
           'waiting for pop...because stack is full' println.
           p := waitPush.
@@ -19,7 +21,8 @@ class StackApp usingPlatform: platform = Value (
         ifFalse: [
           'push ' print.
           x println.
-          vector append: x.
+          counter := counter + 1.
+          stackArray at: counter put: x.
           notifyPop ]
     )
 
@@ -45,15 +48,16 @@ class StackApp usingPlatform: platform = Value (
 
     public pop = (
     | p val |
-      vector isEmpty
+        counter = 0
         ifTrue: [
           'waiting for a push, stack is empty' println.
           p := waitPop.
           ^ p whenResolved: [: value | pop ] ]
         ifFalse: [
-          val := vector remove.
+          val := stackArray at: counter.
           'pop ' print.
           val println.
+          counter := counter - 1.
           notifyPush.
           ^ val ]
     )
@@ -91,7 +95,7 @@ class StackApp usingPlatform: platform = Value (
     r := pair resolver.
     p := pair promise.
 
-    stack := Stack new.
+    stack := Stack new: 2.
 
     promise1 :=  stack <-: push: 1.
     promise2 :=  stack <-: push: 2.
