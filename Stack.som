@@ -12,8 +12,8 @@ class StackApp usingPlatform: platform = Value (
   |)(
 
     public push: x = (
-    | p |
-        stackArray size = counter
+      | p |
+      stackArray size = counter
         ifTrue: [
           'waiting for pop...because stack is full' println.
           p := waitPush.
@@ -27,7 +27,7 @@ class StackApp usingPlatform: platform = Value (
     )
 
     public waitPush = (
-    | pair p r |
+      | pair p r |
       pair := actors createPromisePair.
       r := pair resolver.
       p := pair promise.
@@ -36,8 +36,8 @@ class StackApp usingPlatform: platform = Value (
     )
 
     public notifyPush = (
-    | r |
-       waitingPush isEmpty
+      | r |
+      waitingPush isEmpty
         ifFalse: [
           'notify push' println.
           r := waitingPush at: 1.
@@ -47,8 +47,8 @@ class StackApp usingPlatform: platform = Value (
     )
 
     public pop = (
-    | p val |
-        counter = 0
+      | p val |
+      counter = 0
         ifTrue: [
           'waiting for a push, stack is empty' println.
           p := waitPop.
@@ -63,7 +63,7 @@ class StackApp usingPlatform: platform = Value (
     )
 
     public waitPop = (
-    | pair p r |
+      | pair p r |
       pair := actors createPromisePair.
       r := pair resolver.
       p := pair promise.
@@ -72,7 +72,7 @@ class StackApp usingPlatform: platform = Value (
     )
 
     public notifyPop = (
-    | r |
+      | r |
       waitingPop isEmpty ifFalse: [
         'notify pop' println.
         r := waitingPop at: 1.
@@ -82,7 +82,7 @@ class StackApp usingPlatform: platform = Value (
   )
 
   public main: args = (
-  | p |
+    | p |
     'Hello Stack!' println.
     p := testAsyncStack.
     'testAsyncStack Done' println.
@@ -90,7 +90,7 @@ class StackApp usingPlatform: platform = Value (
   )
 
   public testAsyncStack = (
-  | stack pair r p promise1 promise2 promise3 promise4 promise5 |
+    | stack pair r p promise1 promise2 promise3 promise4 promise5 |
     pair := actors createPromisePair.
     r := pair resolver.
     p := pair promise.
