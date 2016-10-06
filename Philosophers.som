@@ -1,0 +1,179 @@
+class DiningPhilosophersApp usingPlatform: platform = Value (
+
+| private Array     = platform kernel Array.
+  private actors    = platform actors.
+  private Vector    = platform kernel Vector.
+  
+|)(
+
+  public class Waiter new: forks = (
+   | private size = forks.
+   private available = Array new: size.
+   private waitingQueue = Vector new.
+  |)(
+
+  public initForks = (
+     available doIndexes: [:i |
+      available at: i put: true.
+     ]
+  )
+
+  public isForkAvailable: index = (
+  | pair p r |
+    available at: index = true
+      ifTrue: [
+        ^ available at: index.
+      ]
+      ifFalse: [
+        pair := actors createPromisePair.
+        r := pair resolver.
+        p := pair promise.
+        waitingQueue append: r.
+        ^ p
+      ]
+  )
+
+ public pickUpForks: i = (
+  | left right p1 p2 |
+  
+   ('index ' + i) println.
+   left :=  available at: i.
+   right := available at: ((i % size) + 1).
+   ('left ' + i) println.
+   ('right ' + ((i % size) + 1)) println.
+
+   (left = right)
+    ifTrue: [
+      'pick up forks' println.
+      available at: i put: false.
+      available at: ((i % size) + 1) put: false.
+    ]
+    ifFalse: [
+    'no forks available' println.
+     p1 := isForkAvailable: i.
+     p2 := isForkAvailable: ((i % size) + 1).
+
+     (p1, p2) whenResolved: [: value |
+      'resolved both promises' println.
+       pickUpForks: i.
+      ]
+    ]
+  )
+
+  public putDownForks: i = (
+    ('-downforks '+ i) println.
+    ('downforks '+ ((i % size) + 1)) println.
+    available at: i put: false.
+    available at: ((i % size) + 1) put: false.
+
+    (waitingQueue isEmpty = false)
+    ifTrue: [
+      resolvePromise: i.
+      resolvePromise: ((i % size) + 1).
+    ]
+  )
+
+  public resolvePromise: value = (
+  | r |
+  ('resolvePromise ' + value) println.
+  ('waitingQueue ' + waitingQueue size) println.
+
+     r := waitingQueue at: value.
+     r resolve: true.
+     waitingQueue removeFirst.
+     'resolve promise' println.
+  )
+)
+
+public class Philosopher new: name = (
+| private id = name. 
+private counter ::= 0.
+|)(
+      public think = (
+      (id + ' is thinking ') println.
+        1 to: 3 do: [:i |
+          counter := counter + 1.
+        ]
+      )
+
+      public eat = (
+        (id + ' is eating ') println.
+        1 to: 5 do: [:i |
+          counter := counter + 1.
+        ]
+      )
+
+      public stop = (
+        (id + ' stop ') println.
+       )
+
+  )
+
+  public testPhilosophers = (
+  | size names philosophers waiter time pair p r |
+
+   pair := actors createPromisePair.
+   r := pair resolver.
+   p := pair promise.
+  
+  size := 5.     (* number of philosophers is equals to the number of forks *)
+  philosophers := Array new: size.
+  waiter := Waiter new: size.
+  waiter <-: initForks.
+
+  names := Vector new.
+  names append: 'Socrates'.
+  names append: 'Plato'.
+  names append: 'Aristotle'.
+  names append: 'Democritus'.
+  names append: 'Pythagoras'.
+
+  philosophers doIndexes: [:i |
+    | pName philoActor |
+    pName := names at: i.
+    philoActor := (actors createActorFromValue: Philosopher) <-: new: pName.
+    philosophers at: i put: philoActor.
+    ('create actor - '+ pName) println.
+    ].
+
+ time := 0.
+ 1 to: 10 do: [:i |
+  time := time + i.
+  time = 10
+  ifTrue: [
+  (* stop program *)
+    1 to: size do: [:i |
+      (philosophers at: i)  <-: stop.
+    ].
+     r resolve: true
+  ]
+  ifFalse: [
+    1 to: size do: [:i |
+       (* start cycle *) 
+       ((philosophers at: i) <-: think) whenResolved: [:doneThinking |
+         (' ---doneThinking ') println.
+         (waiter <-: pickUpForks: i) whenResolved: [: donePickUp |
+          (' ---donePickUp ') println.
+           ((philosophers at: i) <-: eat) whenResolved: [: doneEating |
+            (' ---doneEating ') println.
+              waiter <-: putDownForks: i.
+              ]
+            ]
+          ]
+      
+    ]
+  ]
+ ].
+
+ ^ p
+ )
+
+  public main: args = (
+  | p |
+
+    'Hello DiningPhilosophersApp!' println.
+     p := testPhilosophers.
+    'testPhilosophers Done' println.    
+    ^ p
+  )
+)
