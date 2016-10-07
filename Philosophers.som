@@ -24,7 +24,7 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
         r := waitingQueue at: 1.
         r resolve: true.
         waitingQueue removeFirst.
-        'resolve promise' println.
+        (* 'resolve promise' println. *)
       ]
     )
   )
@@ -46,18 +46,18 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
  | left right p1 p2 av1 av2 |
    left :=  available at: i.
    right := available at: ((i % size) + 1).
-   ('pick left ' + i +' '+left) println.
-   ('pick right ' + ((i % size) + 1) +' '+right) println.
+   (* ('pick left ' + i +' '+left) println.
+   ('pick right ' + ((i % size) + 1) +' '+right) println. *)
 
    (left = right)
     ifTrue: [
-      'pick up forks' println.
+      (* 'pick up forks' println. *)
       available at: i put: false.
       available at: ((i % size) + 1) put: false.
     ]
     ifFalse: [
     | condVar1 condVar2 |
-      'no forks available' println.
+      (* 'no forks available' println. *)
       condVar1 := ConditionalVars new.
       condVar2 := ConditionalVars new.
       
@@ -68,15 +68,15 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
       cd at: ((i % size) + 1) put: condVar2.
 
       (p1, p2) whenResolved: [: value |
-           'resolved both promises' println.
+           (* 'resolved both promises' println. *)
             pickUpForks: i.
       ]
     ]
   )
 
   public putDownForks: i = (
-    ('-putDownForks '+ i) println.
-    ('putDownForks '+ ((i % size) + 1)) println.
+    (* ('-putDownForks '+ i) println. *)
+    (* ('putDownForks '+ ((i % size) + 1)) println.*)
     available at: i put: true.
     available at: ((i % size) + 1) put: true.
     (cd size > 0)
@@ -95,6 +95,7 @@ public class Philosopher new: name waiter: w number: d = (
   private counter ::= 0.
   private waiter = w.
   private i = d.
+  private timesEat ::= 0.
 |)(
       public think = (
         (n + ' is thinking ') println.
@@ -107,23 +108,24 @@ public class Philosopher new: name waiter: w number: d = (
         (n + ' is eating ') println.
         1 to: 5 do: [:j |
           counter := counter + j.
-        ]
+        ].
+        timesEat := timesEat + 1.
       )
 
       public stop = (
-        (n + ' stop ') println.
+        (n + ' stop ' + ' and ate '+ timesEat +' times') println.
       )
 
       public start = (
-        (n + ' start ') println.
+        (* (n + ' start ') println. *)
         (self <-: think) whenResolved: [: doneThinking |
-            (' ---doneThinking ' + n) println.
+           (* (' ---doneThinking ' + n) println. *)
             (waiter <-: pickUpForks: i) whenResolved: [: donePickUp |
-              (' ---donePickUp ' + n) println.
+             (* (' ---donePickUp ' + n) println. *)
               (self <-: eat) whenResolved: [: doneEating |
-                (' ---doneEating '+ n) println.
+               (* (' ---doneEating '+ n) println. *)
                 waiter <-: putDownForks: i.
-               (* self <-: start. *) 
+                (* self <-: start. *)
                 nil
               ]
             ]
