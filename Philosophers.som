@@ -6,37 +6,33 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
 
   public class Waiter new: forks = (
   | private size = forks.
-     private available = Array new: size.
-     private waitingQueue = Vector new.
+    private available = Array new: size.
+    private waitingQueue = Vector new.
   |
   )(
 
   public initForks = (
     available doIndexes: [:i |
     available at: i put: true.
-     ]
+    ]
   )
 
-  public isForkAvailable: index = (
+  public createPromise = (
   | pair p r |
-    available at: index = true
-      ifTrue: [ ^ available at: index ]
-      ifFalse: [
         pair := actors createPromisePair.
         r := pair resolver.
         p := pair promise.
         waitingQueue append: r.
         ^ p
-      ]
   )
 
  public pickUpForks: i = (
- | left right p1 p2 |
-   ('index ' + i) println.
+ | left right p1 p2 av1 av2 |
    left :=  available at: i.
    right := available at: ((i % size) + 1).
-   ('left ' + i) println.
-   ('right ' + ((i % size) + 1)) println.
+   ('pick left ' + i +' '+left) println.
+   ('pick right ' + ((i % size) + 1) +' '+right) println.
+
    (left = right)
     ifTrue: [
       'pick up forks' println.
@@ -45,21 +41,20 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
     ]
     ifFalse: [
       'no forks available' println.
-      p1 := isForkAvailable: i.
-      p2 := isForkAvailable: ((i % size) + 1).
-
-      (p1, p2) whenResolved: [: value |
-        'resolved both promises' println.
-        pickUpForks: i.
-      ]
+       p1 := createPromise.
+       p2 := createPromise.
+       (p1, p2) whenResolved: [: value |
+           'resolved both promises' println.
+            pickUpForks: i.
+       ]
     ]
   )
 
   public putDownForks: i = (
-    ('-downforks '+ i) println.
-    ('downforks '+ ((i % size) + 1)) println.
-    available at: i put: false.
-    available at: ((i % size) + 1) put: false.
+    ('-putDownForks '+ i) println.
+    ('putDownForks '+ ((i % size) + 1)) println.
+    available at: i put: true.
+    available at: ((i % size) + 1) put: true.
     (waitingQueue isEmpty = false)
     ifTrue: [
       resolvePromise: i.
@@ -69,36 +64,56 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
 
   public resolvePromise: value = (
   | r |
-    ('resolvePromise ' + value) println.
+    ('value ' + value) println.
     ('waitingQueue ' + waitingQueue size) println.
     r := waitingQueue at: value.
+    ('---- ') println.
     r resolve: true.
     waitingQueue removeFirst.
     'resolve promise' println.
   )
 )
 
-public class Philosopher new: name = (
-| private id = name. 
+public class Philosopher new: name waiter: w number: d = (
+| private n = name. 
   private counter ::= 0.
+  private waiter = w.
+  private i = d.
 |)(
       public think = (
-        (id + ' is thinking ') println.
-        1 to: 3 do: [:i |
-          counter := counter + 1.
+        (n + ' is thinking ') println.
+        1 to: 3 do: [:j |
+          counter := counter + j.
         ]
       )
 
       public eat = (
-        (id + ' is eating ') println.
-        1 to: 5 do: [:i |
-          counter := counter + 1.
+        (n + ' is eating ') println.
+        1 to: 5 do: [:j |
+          counter := counter + j.
         ]
       )
 
       public stop = (
-        (id + ' stop ') println.
+        (n + ' stop ') println.
+      )
+
+      public start = (
+        (n + ' start ') println.
+        (self <-: think) whenResolved: [: doneThinking |
+            (' ---doneThinking ' + n) println.
+            (waiter <-: pickUpForks: i) whenResolved: [: donePickUp |
+              (' ---donePickUp ' + n) println.
+              (self <-: eat) whenResolved: [: doneEating |
+                (' ---doneEating '+ n) println.
+                waiter <-: putDownForks: i.
+               (* self <-: start. *) 
+                nil
+              ]
+            ]
+          ]
        )
+
   )
 
   public testPhilosophers = (
@@ -123,10 +138,11 @@ public class Philosopher new: name = (
     philosophers doIndexes: [:i |
       | pName philoActor |
       pName := names at: i.
-      philoActor := (actors createActorFromValue: Philosopher) <-: new: pName.
+      philoActor := (actors createActorFromValue: Philosopher) <-: new: pName waiter: waiter number: i.
       philosophers at: i put: philoActor.
-      ('create actor - '+ pName) println.
     ].
+
+    ('create actors') println.
 
     time := 0.
     1 to: 10 do: [:i |
@@ -142,16 +158,7 @@ public class Philosopher new: name = (
       ifFalse: [
         1 to: size do: [:i |
           (* start cycle *) 
-          ((philosophers at: i) <-: think) whenResolved: [: doneThinking |
-            (' ---doneThinking ') println.
-            (waiter <-: pickUpForks: i) whenResolved: [: donePickUp |
-              (' ---donePickUp ') println.
-              ((philosophers at: i) <-: eat) whenResolved: [: doneEating |
-                (' ---doneEating ') println.
-                waiter <-: putDownForks: i.
-              ]
-            ]
-          ]
+           (philosophers at: i)  <-: start.
         ]
       ]
     ].
