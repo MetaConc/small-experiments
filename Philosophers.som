@@ -3,11 +3,36 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
   private actors    = platform actors.
   private Vector    = platform kernel Vector.
 |)(
+  
+  public class ConditionalVars = (
+   | private waitingQueue = Vector new.
+   |)(
+
+   public createPromise = (
+    | pair p r |
+        pair := actors createPromisePair.
+        r := pair resolver.
+        p := pair promise.
+        waitingQueue append: r.
+        ^ p
+   )
+
+   public resolvePromise = (
+    | r |
+      (waitingQueue size > 0)
+      ifTrue: [
+        r := waitingQueue at: 1.
+        r resolve: true.
+        waitingQueue removeFirst.
+        'resolve promise' println.
+      ]
+    )
+  )
 
   public class Waiter new: forks = (
   | private size = forks.
     private available = Array new: size.
-    private waitingQueue = Vector new.
+    private cd = Array new: size.
   |
   )(
 
@@ -15,15 +40,6 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
     available doIndexes: [:i |
     available at: i put: true.
     ]
-  )
-
-  public createPromise = (
-  | pair p r |
-        pair := actors createPromisePair.
-        r := pair resolver.
-        p := pair promise.
-        waitingQueue append: r.
-        ^ p
   )
 
  public pickUpForks: i = (
@@ -40,13 +56,21 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
       available at: ((i % size) + 1) put: false.
     ]
     ifFalse: [
+    | condVar1 condVar2 |
       'no forks available' println.
-       p1 := createPromise.
-       p2 := createPromise.
-       (p1, p2) whenResolved: [: value |
+      condVar1 := ConditionalVars new.
+      condVar2 := ConditionalVars new.
+      
+      p1 := condVar1 createPromise.
+      p2 := condVar2 createPromise.
+      
+      cd at: i put: condVar1.
+      cd at: ((i % size) + 1) put: condVar2.
+
+      (p1, p2) whenResolved: [: value |
            'resolved both promises' println.
             pickUpForks: i.
-       ]
+      ]
     ]
   )
 
@@ -55,22 +79,14 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
     ('putDownForks '+ ((i % size) + 1)) println.
     available at: i put: true.
     available at: ((i % size) + 1) put: true.
-    (waitingQueue isEmpty = false)
+    (cd size > 0)
     ifTrue: [
-      resolvePromise: i.
-      resolvePromise: ((i % size) + 1).
+      | condVar1 condVar2 |
+      condVar1 := cd at: i.
+      condVar2 := cd at: ((i % size) + 1).
+      condVar1 resolvePromise.
+      condVar2 resolvePromise.
     ]
-  )
-
-  public resolvePromise: value = (
-  | r |
-    ('value ' + value) println.
-    ('waitingQueue ' + waitingQueue size) println.
-    r := waitingQueue at: value.
-    ('---- ') println.
-    r resolve: true.
-    waitingQueue removeFirst.
-    'resolve promise' println.
   )
 )
 
@@ -113,11 +129,10 @@ public class Philosopher new: name waiter: w number: d = (
             ]
           ]
        )
-
   )
 
   public testPhilosophers = (
-  | size names philosophers waiter time pair p r |
+  | size names philosophers waiter time pair p r cv |
 
     pair := actors createPromisePair.
     r := pair resolver.
