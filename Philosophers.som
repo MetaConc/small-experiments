@@ -112,8 +112,10 @@ public class Philosopher new: name waiter: w number: d = (
         timesEat := timesEat + 1.
       )
 
-      public stop = (
-        (n + ' stop ' + ' and ate '+ timesEat +' times') println.
+      public stop: r = (
+        r resolve: true.
+
+        ^ timesEat
       )
 
       public start = (
@@ -168,7 +170,15 @@ public class Philosopher new: name waiter: w number: d = (
       ifTrue: [
         (* stop program *)
         1 to: size do: [:i |
-          (philosophers at: i)  <-: stop.
+        | t pair2 p2 r2 philosop |
+        pair2 := actors createPromisePair.
+        r2 := pair2 resolver.
+        p2 := pair2 promise.
+
+        philosop := philosophers at: i.
+        (philosop  <-: stop: r2) whenResolved: [: t|
+            t println.
+         ]
         ].
         r resolve: true
       ]
