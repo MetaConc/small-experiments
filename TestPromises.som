@@ -1,0 +1,21 @@
+class Hello usingPlatform: platform = Value (
+| private actors = platform actors. |
+)(
+  public getNumber = (
+    ^ 4
+  )
+  public main: args = (
+    | mainProgramPP p |
+    mainProgramPP := actors createPromisePair.
+
+    p := self <-: getNumber.
+    p <-: println.
+
+    p whenResolved: [:v | 1 println. ]. (* promise.whenResolved *)
+    p whenResolved: [:v | 2 println. ]. (* promise.whenResolvedExt[0] *)
+    p whenResolved: [:v | 3 println. ]. (* promise.whenResolvedExt[1] *)
+    p whenResolved: [:v | 'end program' println. mainProgramPP resolver resolve: 22 ]. (* promise.whenResolvedExt[2] *)
+
+    ^ mainProgramPP promise.
+  )
+)
