@@ -1,0 +1,55 @@
+class PromisesApp usingPlatform: platform = Value (
+| private actors = platform actors. 
+  private Vector = platform kernel Vector.
+|)(
+
+private class ChainedPromises new = (
+| private numbers = Vector new.
+|)(
+
+ public getEvenNumber: i end: e = (
+    ^ self <-: getNumber: true init: i end: e
+  )
+
+ public getOddNumber: i end: e = (
+    ^ self <-: getNumber: false init: i end: e
+  )
+
+ public getNumber: type init: i end: e = (
+   | pp r |
+    pp := actors createPromisePair.
+    r := pp resolver.
+
+    i to: e do: [:j |
+      (type = true)
+        ifTrue:[
+           (j%2 = 0)
+              ifTrue:[
+                numbers append: j. (* even numbers*)
+              ]
+        ]
+        ifFalse: [
+          (j%2 <> 0)
+          ifTrue:[
+            numbers append: j. (* odd numbers*)
+          ]
+        ]
+    ].
+
+    r resolve: numbers println.
+    ^ pp promise
+  )
+)
+
+  public main: args = (
+    | mainProgramPP p chain |
+    mainProgramPP := actors createPromisePair.
+
+    chain := ChainedPromises new.
+    p := chain <-: getEvenNumber: 1 end: 9.
+  
+    p whenResolved: [:v | 'end program' println. mainProgramPP resolver resolve: p ].
+
+    ^ mainProgramPP promise.
+  )
+)
