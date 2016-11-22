@@ -20,12 +20,12 @@ class Hello usingPlatform: platform = Value (
       '. Expected: 11' println.
     ].
 
-    callbackPG := callbackPG, ppChained promise whenResolved: [:v |
+    callbackPG := callbackPG, (ppChained promise whenResolved: [:v |
       '[testFirstResolvedThenChained] whenResolved on ppChained: ' print.
       'v was resolved to ' print.
       v print.
       '. Expected: 11' println.
-    ].
+    ]).
 
     callbackPG whenResolved: [:v |
       ppCompletion resolver resolve: #done.
@@ -53,12 +53,12 @@ class Hello usingPlatform: platform = Value (
       '. Expected: 11' println.
     ].
 
-    callbackPG := callbackPG, ppChained promise whenResolved: [:v |
+    callbackPG := callbackPG, (ppChained promise whenResolved: [:v |
       '[testFirstChainedThenResolved] whenResolved on ppChained: ' print.
       'v was resolved to ' print.
       v print.
       '. Expected: 11' println.
-    ].
+    ]).
 
     callbackPG whenResolved: [:v |
       ppCompletion resolver resolve: #done.
