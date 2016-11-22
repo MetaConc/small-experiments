@@ -1,0 +1,81 @@
+class Hello usingPlatform: platform = Value (
+| private actors = platform actors.
+|)(
+
+  public testFirstResolvedThenChained = (
+    | pp ppChained ppCompletion callbackPG |
+    pp := actors createPromisePair.
+    ppChained := actors createPromisePair.
+    ppCompletion := actors createPromisePair.
+
+    (* first resolve *)
+    pp resolver resolve: 11.
+    (* then chain *)
+    ppChained resolver resolve: pp promise.
+
+    callbackPG := pp promise whenResolved: [:v |
+      '[testFirstResolvedThenChained] whenResolved on pp: ' print.
+      'v was resolved to ' print.
+      v print.
+      '. Expected: 11' println.
+    ].
+
+    callbackPG := callbackPG, ppChained promise whenResolved: [:v |
+      '[testFirstResolvedThenChained] whenResolved on ppChained: ' print.
+      'v was resolved to ' print.
+      v print.
+      '. Expected: 11' println.
+    ].
+
+    callbackPG whenResolved: [:v |
+      ppCompletion resolver resolve: #done.
+    ].
+
+    ^ ppCompletion promise.
+  )
+
+  public testFirstChainedThenResolved = (
+    | pp ppChained ppCompletion callbackPG |
+    pp := actors createPromisePair.
+    ppChained := actors createPromisePair.
+    ppCompletion := actors createPromisePair.
+
+    (* first chain *)
+    ppChained resolver resolve: pp promise.
+    
+    (* then resolve *)
+    pp resolver resolve: 11.
+
+    callbackPG := pp promise whenResolved: [:v |
+      '[testFirstChainedThenResolved] whenResolved on pp: ' print.
+      'v was resolved to ' print.
+      v print.
+      '. Expected: 11' println.
+    ].
+
+    callbackPG := callbackPG, ppChained promise whenResolved: [:v |
+      '[testFirstChainedThenResolved] whenResolved on ppChained: ' print.
+      'v was resolved to ' print.
+      v print.
+      '. Expected: 11' println.
+    ].
+
+    callbackPG whenResolved: [:v |
+      ppCompletion resolver resolve: #done.
+    ].
+
+    ^ ppCompletion promise.
+  )
+
+  public main: args = (
+    | pp |
+    pp := actors createPromisePair.
+
+    testFirstChainedThenResolved whenResolved: [:v |
+      testFirstResolvedThenChained whenResolved: [:vv |
+        pp resolver resolve: 0 ] 
+    ].
+    
+    ^ pp promise
+  )
+)
