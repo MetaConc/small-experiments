@@ -1,5 +1,5 @@
 class PromisesApp usingPlatform: platform = Value (
-| private actors = platform actors. 
+| private actors = platform actors.
   private Vector = platform kernel Vector.
 |)(
 
@@ -8,7 +8,10 @@ private class ChainedPromises new = (
 |)(
 
  public getEvenNumber: i end: e = (
-    ^ self <-: getNumber: true init: i end: e
+ | p |
+    p := self <-: getNumber: true init: i end: e.
+    p <-: println.
+    ^ p
   )
 
  public getOddNumber: i end: e = (
@@ -47,7 +50,7 @@ private class ChainedPromises new = (
 
     chain := ChainedPromises new.
     p := chain <-: getEvenNumber: 1 end: 9.
-  
+
     p whenResolved: [:v | 'end program' println. mainProgramPP resolver resolve: p ].
 
     ^ mainProgramPP promise.
