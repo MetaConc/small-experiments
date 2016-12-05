@@ -40,7 +40,8 @@ private class ChainedPromises new = (
     ].
 
     r resolve: numbers println.
-    ^ pp promise
+    pp promise <-: println.
+    ^ pp promise.
   )
 )
 
@@ -52,7 +53,7 @@ private class ChainedPromises new = (
     p := chain <-: getEvenNumber: 1 end: 9.
 
     p whenResolved: [:v | 'end program' println. mainProgramPP resolver resolve: p ].
-
+    mainProgramPP promise <-: println.
     ^ mainProgramPP promise.
   )
 )
