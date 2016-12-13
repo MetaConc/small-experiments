@@ -1,7 +1,7 @@
 class UncaughtExceptionApp usingPlatform: platform = Value (
 | private actors = platform actors. 
   private Array    = platform kernel Array.
-  private Exception = kernel Exception.     
+  private Exception = platform kernel Exception.     
 |)(
 
   public getPositiveNumber: v = (
@@ -30,9 +30,7 @@ class UncaughtExceptionApp usingPlatform: platform = Value (
     numbers at: 3 put: 2. 
 
     p := self <-: getPositiveNumber: numbers.
-    p onError: [ :e |
-      '-error in promise' println.
-    ].
+    p onError: [:e| e println ].
     
     p whenResolved: [:v | 'end program' println. mainProgramPP resolver resolve: 'ok' ].
 
