@@ -1,0 +1,42 @@
+class UncaughtExceptionApp usingPlatform: platform = Value (
+| private actors = platform actors. 
+  private Array    = platform kernel Array.
+  private Exception = kernel Exception.     
+|)(
+
+  public getPositiveNumber: v = (
+  | val |
+    1 to: v size do: [:i|
+    val := v at: i.
+    val println.
+      (val < 0)
+      ifTrue: [
+        'negative number' println.
+        kernel Exception signal.       
+      ]
+      ifFalse: [
+        'positive number' println.
+      ]
+    ].
+  )
+
+   public main: args = (
+    | mainProgramPP p numbers|
+    mainProgramPP := actors createPromisePair.
+    numbers := Array new: 3.
+
+    numbers at: 1 put: 1.
+    numbers at: 2 put: -1.
+    numbers at: 3 put: 2. 
+
+    p := self <-: getPositiveNumber: numbers.
+    p onError: [ :e |
+      e println.
+    ].
+    p resolver error: '-error in promise'.
+
+    p whenResolved: [:v | 'end program' println. mainProgramPP resolver resolve: 'ok' ].
+
+    ^ mainProgramPP promise.
+  )
+)
