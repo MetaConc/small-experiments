@@ -31,10 +31,9 @@ class UncaughtExceptionApp usingPlatform: platform = Value (
 
     p := self <-: getPositiveNumber: numbers.
     p onError: [ :e |
-      e println.
+      '-error in promise' println.
     ].
-    p resolver error: '-error in promise'.
-
+    
     p whenResolved: [:v | 'end program' println. mainProgramPP resolver resolve: 'ok' ].
 
     ^ mainProgramPP promise.
