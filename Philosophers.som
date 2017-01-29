@@ -92,43 +92,47 @@ class DiningPhilosophersApp usingPlatform: platform = Value (
 
 public class Philosopher new: name waiter: w number: d = (
 | private n = name. 
-  private counter ::= 0.
   private waiter = w.
   private i = d.
   private timesEat ::= 0.
+  private continue = true.
 |)(
       public think = (
         (n + ' is thinking ') println.
-        1 to: 3 do: [:j |
-          counter := counter + j.
-        ]
+        actors after: 200 do: [:s|
+          (* (' -finished thinking ' + n) println. *)
+        ].
       )
 
       public eat = (
         (n + ' is eating ') println.
-        1 to: 5 do: [:j |
-          counter := counter + j.
+        actors after: 100 do: [:s|
+          (* (' -finished eating ' + n) println. *)
+          timesEat := timesEat + 1.
         ].
-        timesEat := timesEat + 1.
       )
 
-      public stop: r = (
-        r resolve: true.
+      public stop = (
+      (n + ' stopped ') println.
+       continue = false.
+      )
 
-        ^ timesEat
+      public printResult = (
+       ( n + ' ate ' + timesEat ) println.
       )
 
       public start = (
-        (* (n + ' start ') println. *)
         (self <-: think) whenResolved: [: doneThinking |
-           (* (' ---doneThinking ' + n) println. *)
+            (* (' ---doneThinking ' + n) println. *)
             (waiter <-: pickUpForks: i) whenResolved: [: donePickUp |
-             (* (' ---donePickUp ' + n) println. *)
+            (* (' ---donePickUp ' + n) println. *)
               (self <-: eat) whenResolved: [: doneEating |
-               (* (' ---doneEating '+ n) println. *)
+              (* (' ---doneEating '+ n) println. *)
                 waiter <-: putDownForks: i.
-                (* self <-: start. *)
-                nil
+                 (continue = true)
+                 ifTrue:[
+                   self <-: start.
+                 ]            
               ]
             ]
           ]
@@ -136,7 +140,7 @@ public class Philosopher new: name waiter: w number: d = (
   )
 
   public testPhilosophers = (
-  | size names philosophers waiter time pair p r cv |
+  | size names philosophers waiter pair p r |
 
     pair := actors createPromisePair.
     r := pair resolver.
@@ -144,7 +148,7 @@ public class Philosopher new: name waiter: w number: d = (
   
     size := 5.     (* number of philosophers is equals to the number of forks *)
     philosophers := Array new: size.
-    waiter := Waiter new: size.
+    waiter := (actors createActorFromValue: Waiter) <-: new: size.
     waiter <-: initForks.
 
     names := Vector new.
@@ -161,34 +165,25 @@ public class Philosopher new: name waiter: w number: d = (
       philosophers at: i put: philoActor.
     ].
 
-    ('create actors') println.
-
-    time := 0.
-    1 to: 10 do: [:i |
-      time := time + i.
-      time = 10
-      ifTrue: [
+    (* start program *) 
+    1 to: size do: [:i |
+        (philosophers at: i)  <-: start.
+    ].
+      
+    actors after: 1000 do: [ :a|
         (* stop program *)
         1 to: size do: [:i |
-        | t pair2 p2 r2 philosop |
-        pair2 := actors createPromisePair.
-        r2 := pair2 resolver.
-        p2 := pair2 promise.
-
+        | t philosop |
         philosop := philosophers at: i.
-        (philosop  <-: stop: r2) whenResolved: [: t|
-            t println.
-         ]
+       
+        (philosop <-: stop) whenResolved: [: v |
+          philosop <-: printResult.
         ].
-        r resolve: true
-      ]
-      ifFalse: [
-        1 to: size do: [:i |
-          (* start cycle *) 
-           (philosophers at: i)  <-: start.
-        ]
-      ]
-    ].
+
+        ].
+        r resolve: true 
+      ].
+        
     ^ p
   )
 
@@ -196,7 +191,6 @@ public class Philosopher new: name waiter: w number: d = (
   | p |
     'Hello DiningPhilosophersApp!' println.
      p := testPhilosophers.
-    'testPhilosophers Done' println.    
     ^ p
   )
 )
