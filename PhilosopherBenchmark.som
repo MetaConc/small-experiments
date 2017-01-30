@@ -63,14 +63,11 @@ class PhilosopherBenchmark usingPlatform: platform andHarness: harness = Value (
         | rightForkId |
         rightForkId := 1 + (leftForkId % numForks).
        
-        ('-left ' + leftForkId) println.
-        ('right ' + rightForkId) println.
-
         abortion ifTrue: [^ self]. 
         ((forks at: leftForkId) or: [forks at: rightForkId])
           ifTrue:  [ philosopher <-: denied ]
           ifFalse: [
-          ('-putDownForks ' + leftForkId) println.
+          ('-pickUp Forks ' + leftForkId + rightForkId) println.
             forks at: leftForkId  put: true.
             forks at: rightForkId put: true.
             philosopher <-: eat ]
@@ -78,8 +75,9 @@ class PhilosopherBenchmark usingPlatform: platform andHarness: harness = Value (
 
       public done: leftForkId = (
         | rightForkId |
-        rightForkId := 1 + (leftForkId % numForks).
-
+        rightForkId := 1 + (numForks % leftForkId). 
+        (* rightForkId := numForks. *)
+        ('-putDown Forks ' + leftForkId + rightForkId) println.
         forks at: leftForkId  put: false.
         forks at: rightForkId put: false.
       )
@@ -92,7 +90,7 @@ class PhilosopherBenchmark usingPlatform: platform andHarness: harness = Value (
           forksTaken := 0.
           forks do: [:f | f ifTrue: [ forksTaken := forksTaken + 1 ] ].
 
-          resolver resolve: forksTaken ]
+          resolver resolve: 0 ]
       )
 
       public abort = (
@@ -118,7 +116,7 @@ class PhilosopherBenchmark usingPlatform: platform andHarness: harness = Value (
           arbitrator <-: abort.
           'Benchmark timed out' println.
         ]
-      ].
+      ]. 
 
       philosophers := Array new: numPhil.
       philosophers doIndexes: [:i |
