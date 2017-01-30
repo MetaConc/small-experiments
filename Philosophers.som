@@ -95,44 +95,42 @@ public class Philosopher new: name waiter: w number: d = (
   private waiter = w.
   private i = d.
   private timesEat ::= 0.
+  private timesThink ::= 0.
   private continue = true.
 |)(
       public think = (
-        (n + ' is thinking ') println.
-        actors after: 200 do: [:s|
-          (* (' -finished thinking ' + n) println. *)
+       (* (n + ' is thinking ') println. *)
+        actors after: 2 do: [:s|
+         timesThink := timesThink + 1.
         ].
       )
 
       public eat = (
-        (n + ' is eating ') println.
-        actors after: 100 do: [:s|
-          (* (' -finished eating ' + n) println. *)
+       (* (n + ' is eating ') println. *)
+        actors after: 1 do: [:s|
           timesEat := timesEat + 1.
         ].
       )
 
       public stop = (
-      (n + ' stopped ') println.
-       continue = false.
+        (n + ' stopped ') println.
+        continue = false.
       )
 
       public printResult = (
-       ( n + ' ate ' + timesEat ) println.
+        ( n + ' think ' + timesThink ) println.
+        ( n + ' ate ' + timesEat ) println.
       )
 
       public start = (
         (self <-: think) whenResolved: [: doneThinking |
-            (* (' ---doneThinking ' + n) println. *)
             (waiter <-: pickUpForks: i) whenResolved: [: donePickUp |
-            (* (' ---donePickUp ' + n) println. *)
               (self <-: eat) whenResolved: [: doneEating |
-              (* (' ---doneEating '+ n) println. *)
                 waiter <-: putDownForks: i.
                  (continue = true)
                  ifTrue:[
                    self <-: start.
-                 ]            
+                 ]           
               ]
             ]
           ]
@@ -170,16 +168,14 @@ public class Philosopher new: name waiter: w number: d = (
         (philosophers at: i)  <-: start.
     ].
       
-    actors after: 1000 do: [ :a|
+    actors after: 10 do: [ :a|
         (* stop program *)
         1 to: size do: [:i |
         | t philosop |
         philosop := philosophers at: i.
-       
-        (philosop <-: stop) whenResolved: [: v |
-          philosop <-: printResult.
-        ].
-
+          (philosop <-: stop) whenResolved: [: v |
+            philosop <-: printResult.
+          ].
         ].
         r resolve: true 
       ].
