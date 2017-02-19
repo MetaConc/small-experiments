@@ -1,0 +1,17 @@
+class Hello usingPlatform: platform = Value (
+| private actors = platform actors. |
+)(
+
+  public main: args = (
+    | mainProgramPP p |
+    mainProgramPP := actors createPromisePair.
+    mainProgramPP promise onError: [:e | e println ].
+    mainProgramPP resolver error: 22.
+
+    ^ mainProgramPP promise.
+  )
+)
+
+public foo = ( Exception signal )
+
+test = ( self <-: foo onError: [:e | e println ] )
