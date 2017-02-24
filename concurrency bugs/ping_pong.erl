@@ -3,24 +3,15 @@
 
 play() ->
   Ping = spawn(fun ping/0),
-  Pong = spawn(fun pong/0),
-  Pong ! {ping, Ping}.
+    spawn(fun() -> pong(Ping) end).
 
+    ping() ->
+    receive
+      pong -> ok
+    end.
 
-ping() ->
-  Ping = self(),
-  receive
-    {pong, Pong} ->
-      io:format("pong~n"),
-      Pong ! {ping,Ping },
-      ping()
-  end.
-
-pong() ->
-  Pong = self(),
-  receive
-    {ping, Ping} ->
-        io:format("ping~n"),
-        Ping ! { pong, Pong},
-        pong()
-  end.
+    pong(Ping) ->
+      Ping ! pong,
+      receive
+        ping -> ok
+      end.
